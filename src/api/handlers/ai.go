@@ -25,6 +25,11 @@ func (i *AI) HealthCheck(c *gin.Context) {
 	c.JSON(200, "up-and-running")
 }
 
+func (i *AI) Leads(c *gin.Context) {
+	fmt.Println(c.Param("lead"))
+	c.JSON(200, fmt.Sprintf("lead received %s", c.Param("lead")))
+}
+
 func (i *AI) Chat(c *gin.Context) {
 	i.logger.Info("Chat attempt")
 

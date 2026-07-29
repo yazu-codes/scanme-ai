@@ -38,6 +38,7 @@ func main() {
 	server.SetupDefaultConfig()
 
 	server.Router.GET("/", aiHandler.HealthCheck)
+	server.Router.POST("/leads", aiHandler.Leads)
 	server.Router.POST("/chat", aiHandler.Chat)
 
 	server.Run()
