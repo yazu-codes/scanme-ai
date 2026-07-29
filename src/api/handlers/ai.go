@@ -14,13 +14,14 @@ import (
 )
 
 type AI struct {
-	logger      *slog.Logger
-	aiService   *services.AI
-	menuService *services.Menu
+	logger        *slog.Logger
+	aiService     *services.AI
+	menuService   *services.Menu
+	sheetsService *services.Sheets
 }
 
-func NewAI(ai *services.AI, menu *services.Menu, logger *slog.Logger) *AI {
-	return &AI{aiService: ai, menuService: menu, logger: logger}
+func NewAI(ai *services.AI, menu *services.Menu, sheets *services.Sheets, logger *slog.Logger) *AI {
+	return &AI{aiService: ai, menuService: menu, logger: logger, sheetsService: sheets}
 }
 
 func (i *AI) HealthCheck(c *gin.Context) {
@@ -29,28 +30,40 @@ func (i *AI) HealthCheck(c *gin.Context) {
 }
 
 func (i *AI) Leads(c *gin.Context) {
-	// Read the body
+	// Read and log body
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		log.Printf("Error reading body: %v", err)
 		c.JSON(400, gin.H{"error": "failed to read body"})
 		return
 	}
 
-	// Log it
-	log.Printf("Received body: %s", string(body))
-
-	// Important: restore the body so you can still bind it
+	// Restore body for binding
 	c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
 
-	// Now you can bind normally
-	var data model.Lead
-	if err := c.BindJSON(&data); err != nil {
+	// Log the received body
+	log.Printf("Received: %s", string(body))
+
+	// Bind JSON
+	var lead model.Lead
+	if err := c.BindJSON(&lead); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(200, data)
+	// Save to Google Sheets
+	err = i.sheetsService.SaveLead("", lead.Email, lead.Phone, "")
+	if err != nil {
+		c.JSON(500, gin.H{"error": "failed to save lead"})
+		return
+	}
+
+	// Success response
+	c.JSON(200, gin.H{
+		"status":  "success",
+		"message": "Lead saved successfully",
+		"lead":    lead,
+	})
+
 }
 
 func (i *AI) Chat(c *gin.Context) {
