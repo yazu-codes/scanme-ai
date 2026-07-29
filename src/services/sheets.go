@@ -44,6 +44,9 @@ func (s *Sheets) SaveLead(name, email, phone, message string) error {
 		time.Now().Format("2006-01-02 15:04:05"),
 	}
 
+	fmt.Println("VALUES:")
+	fmt.Println(values...)
+
 	// Append to Sheet1
 	_, err := s.sheetsAPI.Spreadsheets.Values.Append(
 		s.spreadsheetID,
