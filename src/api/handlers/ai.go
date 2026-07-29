@@ -1,7 +1,10 @@
 package handlers
 
 import (
+	"bytes"
 	"fmt"
+	"io"
+	"log"
 	"log/slog"
 	"net/http"
 
@@ -26,8 +29,28 @@ func (i *AI) HealthCheck(c *gin.Context) {
 }
 
 func (i *AI) Leads(c *gin.Context) {
-	fmt.Println(c.Param("lead"))
-	c.JSON(200, fmt.Sprintf("lead received %s", c.Param("lead")))
+	// Read the body
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		log.Printf("Error reading body: %v", err)
+		c.JSON(400, gin.H{"error": "failed to read body"})
+		return
+	}
+
+	// Log it
+	log.Printf("Received body: %s", string(body))
+
+	// Important: restore the body so you can still bind it
+	c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
+
+	// Now you can bind normally
+	var data model.Lead
+	if err := c.BindJSON(&data); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, data)
 }
 
 func (i *AI) Chat(c *gin.Context) {
