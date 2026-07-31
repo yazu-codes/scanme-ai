@@ -33,6 +33,7 @@ func NewSheetsServiceFromConfig(spreadsheetID string, credentialsJSON []byte) (*
 
 // SaveLead appends a lead to the spreadsheet
 func (s *Sheets) SaveLead(name, email, phone, message string) error {
+	fmt.Println("LEAD RECEIVED:", name, email, phone, message)
 	// ctx := context.Background()
 
 	// Prepare the row data
